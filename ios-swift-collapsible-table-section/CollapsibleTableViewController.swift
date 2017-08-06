@@ -14,6 +14,8 @@ import UIKit
 class CollapsibleTableViewController: UITableViewController {
     
     var sections = sectionsData
+    var selectedRow: IndexPath? = nil
+   
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -31,7 +33,7 @@ class CollapsibleTableViewController: UITableViewController {
 // MARK: - View Controller DataSource and Delegate
 //
 extension CollapsibleTableViewController {
-
+    
     override func numberOfSections(in tableView: UITableView) -> Int {
         return sections.count
     }
@@ -48,7 +50,7 @@ extension CollapsibleTableViewController {
         let item: Item = sections[indexPath.section].items[indexPath.row]
         
         cell.nameLabel.text = item.name
-        cell.detailLabel.text = item.detail
+        cell.detailLabel.text = (selectedRow != nil) && indexPath.elementsEqual(selectedRow!) ? item.detail : ""
         
         return cell
     }
@@ -77,6 +79,17 @@ extension CollapsibleTableViewController {
     
     override func tableView(_ tableView: UITableView, heightForFooterInSection section: Int) -> CGFloat {
         return 1.0
+    }
+    
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        print("didSelectRowAt...")
+        let prevSelectedRow = selectedRow
+        selectedRow = indexPath
+        var reloadRows = [indexPath]
+        if(prevSelectedRow != nil) {
+            reloadRows.append(prevSelectedRow!)
+        }
+        self.tableView.reloadRows(at: reloadRows, with: .automatic)
     }
 
 }
