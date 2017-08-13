@@ -15,6 +15,7 @@ class CollapsibleTableViewController: UITableViewController {
     
     var sections = sectionsData
     var selectedRow: IndexPath? = nil
+    var expanding = false
    
     
     override func viewDidLoad() {
@@ -83,12 +84,23 @@ extension CollapsibleTableViewController {
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         print("didSelectRowAt...")
+        if(sections[indexPath.section].collapsed) {
+            return;
+        }
+        else if(expanding) {
+            print("ABORTING didSelectRowAt...")
+            return
+        }
+
+        // Check if previous selected row is now in a collapsed section.
+        // If it isn't add it to the list of rows to reload.
         let prevSelectedRow = selectedRow
-        selectedRow = indexPath
-        var reloadRows = [indexPath]
-        if(prevSelectedRow != nil) {
+        var reloadRows = [IndexPath]()
+        if(prevSelectedRow != nil && !sections[prevSelectedRow!.section].collapsed) {
             reloadRows.append(prevSelectedRow!)
         }
+        selectedRow = indexPath
+        reloadRows.append(selectedRow!)
         self.tableView.reloadRows(at: reloadRows, with: .automatic)
     }
 
@@ -106,7 +118,19 @@ extension CollapsibleTableViewController: CollapsibleTableViewHeaderDelegate {
         sections[section].collapsed = collapsed
         header.setCollapsed(collapsed)
         
+        // Probably need to wrap this in a begin/endUpdates batch.
+        
+        CATransaction.begin()
+        print("Begin expanding.")
+        expanding = true
+        tableView.beginUpdates()
+        CATransaction.setCompletionBlock {
+            self.expanding = false
+            print("   DONE expanding.")
+        }
         tableView.reloadSections(NSIndexSet(index: section) as IndexSet, with: .automatic)
+        tableView.endUpdates()
+        CATransaction.commit()
     }
     
 }
